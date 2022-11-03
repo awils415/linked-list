@@ -5,5 +5,4 @@
 # Aniya Wilson
 
 list: main.c
-	gcc -o list main.c list.c -I.
-
+	gcc main.c list.c -o list -I.

@@ -24,32 +24,32 @@ node_t *node_alloc(elem val) {
 }
 
 void list_free(list_t *l) {
-  node_t* curr;
-	while (head != NULL) {
-		curr = head;
-		head = head->next;
-  	free(curr);
-	}
+  node_t *temp;
+  node_t *next;
+  if (l == NULL)
+    return;
+  temp = l->head;
+  while (temp != NULL) {
+    next = temp->next;
+    free(temp);
+    temp = next;
+  }
 }
-
-/*
-void node_free(node_t *n) {
-
-  free(n);
-}
-*/
-
 
 void list_print(list_t *l) {
   //use current pointer to track node currently printing
   node_t * curr = l->head;
-
-  //set current pointer to next node, print again, until end of list reached (next->NULL)
-  while (curr != NULL) {
-    printf("%d ", curr->val);
-    curr = curr->next;
+  if (curr == NULL) {
+    printf("List is empty.");
   }
-  printf("List is empty.")
+  else {
+    //set current pointer to next node, print again, until end of list reached (next->NULL)
+    while (curr != NULL) {
+      printf("%d->", curr->value);
+      curr = curr->next;
+    }
+    printf("\n");
+  }
 }
 
 int list_length(list_t *l) {
@@ -63,122 +63,190 @@ int list_length(list_t *l) {
     length += 1;
     curr = curr->next;;
   }
-  return length
+  return length;
 }
 
 void list_add_to_back(list_t *l, elem value) {
-  node_t * curr = head;
-  while (curr->next != NULL) {
-    curr = curr->next;
+  node_t *new_node; 
+  new_node = (node_t *) malloc(sizeof(node_t));
+  new_node->value = value;
+  new_node->next = NULL;
+  // empty list
+  if (l->head == NULL) {
+    l->head = new_node;
   }
-
-  curr->next = (node_t *) malloc(sizeof(node_t));
-  curr->next->value = value;
-  curr->next->next = NULL;
+  // nonempty list
+  else {
+    node_t *tail = l->head;
+    while(tail->next != NULL) {
+      tail = tail->next;
+    }
+    tail->next = new_node;
+  }  
 }
 
 void list_add_to_front(list_t *l, elem value) {
-  //create new iteam and set its value
-  node_t * new_node;
+  //create new item and set its value
+  node_t *new_node;
   new_node = (node_t *) malloc(sizeof(node_t));
   //link new item to point to head of the list
   new_node->value = value;
-  new_node->next = *head;
+  new_node->next = l->head;
   //set head of list to be new item
-  *head = new_node;
+  l->head = new_node;
 }
 
 void list_add_at_index(list_t *l, elem value, int index) {
-  int i = 0;
-  int retval = -1;
-  list_t * curr = *l;
-  list_t * temp = NULL;
-
-  if (n == 0) {
-    return pop(l);
+  int size;
+  size = list_length(l);
+  //printf("size: %d\n", size);
+  node_t *new_node; 
+  new_node = (node_t *) malloc(sizeof(node_t));
+  new_node->value = value;
+  new_node->next = NULL;
+  // inserting as head
+  if (index == 0) {
+    new_node->next = l->head;
+    l->head = new_node;
   }
-
-  for (i = 0; i < n-1; i++) {
-    if (curr->next == NULL) {
-      return -1;
+  // empty list, out of range
+  else if ((index < 0 && l->head == NULL) || (index > size && l->head == NULL)) {
+    new_node->next = l->head;
+    l->head = new_node;
+  }  
+  // nonempty list, out of range
+  else if (index > size && l->head != NULL) {
+    node_t *tail = l->head;
+    while(tail->next != NULL) {
+      tail = tail->next;
     }
-    curr = curr->next;
+    tail->next = new_node;
+  }  
+  else {
+    node_t *curr = l->head;
+    while (--index) {
+      curr = curr->next;
+    }
+    new_node->next = curr->next;
+    curr->next = new_node;
   }
-
-  if (curr->next == NULL) {
-    return -1;
-  }
-
-  temp = curr->next;
-  retval = temp->value;
-  curr->next = temp->next;
-  free(temp);
-
-  return retval;
 }
 
 elem list_remove_from_back(list_t *l) {
-  int retval = 0;
+  int retval = -1;
+  if (l->head == NULL) {
+    return retval;
+  }
   //if only one item in list, remove it
-  if (head->next == NULL) {
-    retval = head->val;
-    free(head);
+  if (l->head->next == NULL) {
+    retval = l->head->value;
+    free(l->head);
     return retval;
   }
 
   //move to second to last node
-  node_t * curr = head;
+  node_t * curr = l->head;
   while (curr->next->next != NULL) {
     curr = curr->next;
   }
 
   //current points to second to last item, remove curr->next 
-  retval = curr->next->val;
+  retval = curr->next->value;
   free(curr->next);
   curr->next = NULL;
   return retval;
 }
 
+
 elem list_remove_from_front(list_t *l) {
   int retval = -1;
   node_t * next_node = NULL;
 
-  if (*head == NULL) {
-    return -1;
+  if (l->head == NULL) {
+    return retval;
   }
   //save next item head points to
-  next_node = (*head)->next;
-  retval = (*head)->val;
+  next_node = (l->head)->next;
+  retval = (l->head)->value;
   //free head item
-  free(*head);
+  free(l->head);
   //set head to next item stored
-  *head = next_node;
+  l->head = next_node;
 
   return retval;
 }
 
-/*
+
 elem list_remove_at_index(list_t *l, int index) {
-  //iterate to node before to be deleted node
-  int i = 0;
   int retval = -1;
-  //save node to be deleted to temp pointer
-  //set previous node's next pointer to node after to be deleted node
-  //delete node using temp pointer
+  if (index < 1 || l->head == NULL) {
+    return retval;
+  }
+  else if (index == 0 && l->head != NULL) {
+    node_t *del;
+    del = l->head;
+    l->head = (l->head)->next;
+    retval = l->head->value;
+    free(del);
+    return retval;
+  }
+  else {
+    node_t *temp;
+    temp = l->head;
+    int i;
+    for (i = 0; i < index-1; i++) {
+      if (temp != NULL) {
+        temp = temp->next;
+      }
+    }
+    if (temp != NULL && temp->next != NULL) {
+      node_t *del = temp->next;
+      retval = temp->next->value;
+      temp->next = temp->next->next;
+      free(del);
+      return retval;
+    }
+    else {
+      return retval;
+    }
+  }
 }
-*/
 
-/*
 bool list_is_in(list_t *l, elem value) {
-
+  node_t * curr = l->head;
+  while (curr != NULL) {
+    if (curr->value == value) {
+      return true;
+    }
+    curr = curr->next;
+  }
+  return false;
 }
+
 
 elem list_get_elem_at(list_t *l, int index) {
-
+  node_t * curr = l->head; 
+  int i = 0;
+  while (curr != NULL) {
+    if (i == index) {
+      return curr->value;
+    }
+    i++;
+    curr = curr->next;
+  }
+  return -1;
 }
 
 int list_get_index_of(list_t *l, elem value) {
-
+  int retval;
+  node_t * curr;
+  retval = 0;
+  curr = l->head;
+  while (curr != NULL && curr->value != value) {
+    retval++;
+    curr = curr->next;
+  }
+  return (curr != NULL) ? retval : -1;
 }
-*/
+
 
